@@ -156,7 +156,8 @@ class KanaPractice:
         try:
             while True:
                 kana_char, romaji = self.get_random_kana()
-                prompt = random.choice([0, 1])
+                #  prompt = random.choice([0, 1])
+                prompt = 0
                 if prompt == 0:
                     self.prompt_kana_to_romaji(kana_char, romaji)
                 else:
