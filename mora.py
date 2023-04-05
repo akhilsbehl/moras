@@ -5,6 +5,8 @@ import sys
 from typing import Dict
 from typing import Tuple
 
+from termcolor import colored
+
 KANA_TO_ROMAJI: Dict[str, Dict[str, str]] = {
     "Hiragana": {
         "あ": "a",
@@ -141,117 +143,6 @@ class KanaPractice:
             print("\nSession aborted.")
             sys.exit()
 
-    def start_practice(self) -> None:
-        """Start the session."""
-        try:
-            while True:
-                kana_char, romaji = self.get_random_kana()
-                prompt = random.choice([0, 1])  # randomly choose prompt type
-                if prompt == 0:  # Kana to Romaji
-                    user_input = input(
-                        f"What is the romaji representation of {self.selected_choice} {kana_char}: "
-                    )
-                    if user_input.lower() == romaji.lower():
-                        print("Correct!")
-                        self.session_score["correct"] += 1
-                        self.kana_to_romaji_score["correct"] += 1
-                    else:
-                        print(f"Incorrect! The correct answer is {romaji}.")
-                    self.session_score["total"] += 1
-                    self.kana_to_romaji_score["total"] += 1
-                else:  # Romaji to Kana
-                    user_input = input(
-                        f"What is the {self.selected_choice} representation of {romaji}: "
-                    )
-                    if user_input.lower() == kana_char.lower():
-                        print("Correct!")
-                        self.session_score["correct"] += 1
-                        self.romaji_to_kana_score["correct"] += 1
-                    else:
-                        print(f"Incorrect! The correct answer is {kana_char}.")
-                    self.session_score["total"] += 1
-                    self.romaji_to_kana_score["total"] += 1
-
-                # Handle division by zero error
-                if self.session_score["total"] == 0:
-                    accuracy = 0
-                else:
-                    accuracy = (
-                        self.session_score["correct"] /
-                        self.session_score["total"]
-                    ) * 100
-
-                if self.kana_to_romaji_score["total"] == 0:
-                    kana_to_romaji_accuracy = 0
-                else:
-                    kana_to_romaji_accuracy = (
-                        self.kana_to_romaji_score["correct"]
-                        / self.kana_to_romaji_score["total"]
-                    ) * 100
-
-                if self.romaji_to_kana_score["total"] == 0:
-                    romaji_to_kana_accuracy = 0
-                else:
-                    romaji_to_kana_accuracy = (
-                        self.romaji_to_kana_score["correct"]
-                        / self.romaji_to_kana_score["total"]
-                    ) * 100
-
-                print(
-                    "Session score: "
-                    f"{self.session_score['correct']}/"
-                    f"{self.session_score['total']} ({accuracy:.2f}%)\n"
-                    f"{self.selected_choice} to Romaji score: "
-                    f"{self.kana_to_romaji_score['correct']}/"
-                    f"{self.kana_to_romaji_score['total']} "
-                    f"({kana_to_romaji_accuracy:.2f}%)\n"
-                    f"Romaji to {self.selected_choice} score: "
-                    f"{self.romaji_to_kana_score['correct']}/"
-                    f"{self.romaji_to_kana_score['total']} "
-                    f"({romaji_to_kana_accuracy:.2f}%)\n"
-                )
-
-        except KeyboardInterrupt:
-            print("\nSession aborted. Final score:")
-
-            # Handle division by zero error
-            if self.session_score["total"] == 0:
-                accuracy = 0
-            else:
-                accuracy = (
-                    self.session_score["correct"] / self.session_score["total"]
-                )
-
-            if self.kana_to_romaji_score["total"] == 0:
-                kana_to_romaji_accuracy = 0
-            else:
-                kana_to_romaji_accuracy = (
-                    self.kana_to_romaji_score["correct"]
-                    / self.kana_to_romaji_score["total"]
-                ) * 100
-
-            if self.romaji_to_kana_score["total"] == 0:
-                romaji_to_kana_accuracy = 0
-            else:
-                romaji_to_kana_accuracy = (
-                    self.romaji_to_kana_score["correct"]
-                    / self.romaji_to_kana_score["total"]
-                ) * 100
-
-            print(
-                "Session score: "
-                f"{self.session_score['correct']}/"
-                f"{self.session_score['total']} ({accuracy:.2f}%)\n"
-                f"{self.selected_choice} to Romaji score: "
-                f"{self.kana_to_romaji_score['correct']}/"
-                f"{self.kana_to_romaji_score['total']} "
-                f"({kana_to_romaji_accuracy:.2f}%)\n"
-                f"Romaji to {self.selected_choice} score: "
-                f"{self.romaji_to_kana_score['correct']}/"
-                f"{self.romaji_to_kana_score['total']} "
-                f"({romaji_to_kana_accuracy:.2f}%)\n"
-            )
-
     def get_random_kana(self) -> Tuple[str, str]:
         """Get a randomized kana."""
         assert self.selected_choice is not None
@@ -259,6 +150,105 @@ class KanaPractice:
         kana_char = random.choice(list(kana_dict.keys()))
         romaji = kana_dict[kana_char]
         return kana_char, romaji
+
+    def start_practice(self) -> None:
+        """Start the session."""
+        try:
+            while True:
+                kana_char, romaji = self.get_random_kana()
+                prompt = random.choice([0, 1])
+                if prompt == 0:
+                    self.prompt_kana_to_romaji(kana_char, romaji)
+                else:
+                    self.prompt_romaji_to_kana(kana_char, romaji)
+
+                self.print_session_scores()
+
+        except KeyboardInterrupt:
+            self.print_final_scores()
+
+    def prompt_kana_to_romaji(self, kana_char: str, romaji: str) -> None:
+        """Prompt the user for kana to romaji translation."""
+        user_input = input(
+            f"What is the romaji representation of {self.selected_choice} " +
+            colored(f"{kana_char}", "yellow", attrs=["bold"]) + ": "
+        )
+        if user_input.lower() == romaji.lower():
+            print(
+                colored("\u2714 Correct!", "green", attrs=["bold"])
+            )
+            self.session_score["correct"] += 1
+            self.kana_to_romaji_score["correct"] += 1
+        else:
+            print(
+                colored("\u2716 Incorrect!", "red", attrs=["bold"]),
+                "The correct answer is ",
+                colored(f"{romaji}", "red", attrs=["bold"]) + "."
+            )
+        self.session_score["total"] += 1
+        self.kana_to_romaji_score["total"] += 1
+
+    def prompt_romaji_to_kana(self, kana_char: str, romaji: str) -> None:
+        """Prompt the user for romaji to kana translation."""
+        user_input = input(
+            f"What is the {self.selected_choice} representation of " +
+            colored(f"{romaji}", "yellow", attrs=["bold"]) + ": "
+        )
+        if user_input.lower() == kana_char.lower():
+            print(
+                colored("\u2714 Correct!", "green", attrs=["bold"])
+            )
+            self.session_score["correct"] += 1
+            self.romaji_to_kana_score["correct"] += 1
+        else:
+            print(
+                colored("\u2716 Incorrect!", "red", attrs=["bold"]),
+                "The correct answer is ",
+                colored(f"{kana_char}", "red", attrs=["bold"]) + "."
+            )
+        self.session_score["total"] += 1
+        self.romaji_to_kana_score["total"] += 1
+
+    def print_session_scores(self) -> None:
+        """Print the session scores."""
+        print(
+            "Session score:",
+            colored(
+                f"{self.session_score['correct']}/"
+                f"{self.session_score['total']}",
+                "blue",
+                attrs=["bold"]
+            )
+        )
+
+    def print_final_scores(self) -> None:
+        """Print the final scores."""
+        print(
+            colored(
+                f"\nFinal score: {self.session_score['correct']}/"
+                f"{self.session_score['total']}",
+                "blue",
+                attrs=["bold"],
+            )
+        )
+        print(
+            colored(
+                "Kana to romaji score:"
+                f" {self.kana_to_romaji_score['correct']}/"
+                f"{self.kana_to_romaji_score['total']}",
+                "blue",
+                attrs=["bold"],
+            )
+        )
+        print(
+            colored(
+                f"Romaji to kana score:"
+                f" {self.romaji_to_kana_score['correct']}/"
+                f"{self.romaji_to_kana_score['total']}",
+                "blue",
+                attrs=["bold"],
+            )
+        )
 
 
 if __name__ == "__main__":
