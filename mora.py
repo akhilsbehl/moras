@@ -127,15 +127,14 @@ class KanaPractice:
                     f"({', '.join(self.choices)})? "
                 ).lower()
                 matched_choices = [
-                    c for c in self.choices if
-                    c.lower().startswith(user_input)
+                    c for c in self.choices if c.lower().startswith(user_input)
                 ]
                 if len(matched_choices) == 1:
                     self.selected_choice = matched_choices[0]
                 elif len(matched_choices) > 1:
                     print(
-                        "Multiple matches found:"
-                        f" {', '.join(matched_choices)}"
+                        "Multiple matches found:",
+                        f"{', '.join(matched_choices)}"
                     )
                 else:
                     print("No matches found.")
@@ -171,20 +170,19 @@ class KanaPractice:
     def prompt_kana_to_romaji(self, kana_char: str, romaji: str) -> None:
         """Prompt the user for kana to romaji translation."""
         user_input = input(
-            f"What is the romaji representation of {self.selected_choice} " +
-            colored(f"{kana_char}", "yellow", attrs=["bold"]) + ": "
+            f"What is the romaji representation of {self.selected_choice} "
+            + colored(f"{kana_char}", "yellow", attrs=["bold"])
+            + ": "
         )
         if user_input.lower() == romaji.lower():
-            print(
-                colored("\u2714 Correct!", "green", attrs=["bold"])
-            )
+            print(colored("\u2714 Correct!", "green", attrs=["bold"]))
             self.session_score["correct"] += 1
             self.kana_to_romaji_score["correct"] += 1
         else:
             print(
                 colored("\u2716 Incorrect!", "red", attrs=["bold"]),
                 "The correct answer is ",
-                colored(f"{romaji}", "red", attrs=["bold"]) + "."
+                colored(f"{romaji}", "red", attrs=["bold"]) + ".",
             )
         self.session_score["total"] += 1
         self.kana_to_romaji_score["total"] += 1
@@ -192,42 +190,82 @@ class KanaPractice:
     def prompt_romaji_to_kana(self, kana_char: str, romaji: str) -> None:
         """Prompt the user for romaji to kana translation."""
         user_input = input(
-            f"What is the {self.selected_choice} representation of " +
-            colored(f"{romaji}", "yellow", attrs=["bold"]) + ": "
+            f"What is the {self.selected_choice} representation of "
+            + colored(f"{romaji}", "yellow", attrs=["bold"])
+            + ": "
         )
         if user_input.lower() == kana_char.lower():
-            print(
-                colored("\u2714 Correct!", "green", attrs=["bold"])
-            )
+            print(colored("\u2714 Correct!", "green", attrs=["bold"]))
             self.session_score["correct"] += 1
             self.romaji_to_kana_score["correct"] += 1
         else:
             print(
                 colored("\u2716 Incorrect!", "red", attrs=["bold"]),
                 "The correct answer is ",
-                colored(f"{kana_char}", "red", attrs=["bold"]) + "."
+                colored(f"{kana_char}", "red", attrs=["bold"]) + ".",
             )
         self.session_score["total"] += 1
         self.romaji_to_kana_score["total"] += 1
 
     def print_session_scores(self) -> None:
         """Print the session scores."""
+        percentage = (
+            self.session_score["correct"] / self.session_score["total"] * 100
+            if self.session_score["total"] != 0
+            else 0
+        )
         print(
             "Session score:",
             colored(
                 f"{self.session_score['correct']}/"
-                f"{self.session_score['total']}",
+                f"{self.session_score['total']} "
+                f"({percentage:.2f}%)",
                 "blue",
-                attrs=["bold"]
-            )
+                attrs=["bold"],
+            ),
         )
+
+    def calculate_final_scores(self) -> None:
+        """Print the final scores."""
+        kana_to_romaji_percentage = (
+            self.kana_to_romaji_score["correct"]
+            / self.kana_to_romaji_score["total"]
+            * 100
+            if self.kana_to_romaji_score["total"] != 0
+            else 0
+        )
+        romaji_to_kana_percentage = (
+            self.romaji_to_kana_score["correct"]
+            / self.romaji_to_kana_score["total"]
+            * 100
+            if self.romaji_to_kana_score["total"] != 0
+            else 0
+        )
+        session_percentage = (
+            self.session_score["correct"] / self.session_score["total"] * 100
+            if self.session_score["total"] != 0
+            else 0
+        )
+
+    return (
+        session_percentage,
+        kana_to_romaji_percentage,
+        romaji_to_kana_percentage,
+    )
 
     def print_final_scores(self) -> None:
         """Print the final scores."""
+        (
+            session_percentage,
+            kana_to_romaji_percentage,
+            romaji_to_kana_percentage,
+        ) = self.calculate_final_scores()
+
         print(
             colored(
                 f"\nFinal score: {self.session_score['correct']}/"
-                f"{self.session_score['total']}",
+                f"{self.session_score['total']} "
+                f"({session_percentage:.2f}%)",
                 "blue",
                 attrs=["bold"],
             )
@@ -236,7 +274,8 @@ class KanaPractice:
             colored(
                 "Kana to romaji score:"
                 f" {self.kana_to_romaji_score['correct']}/"
-                f"{self.kana_to_romaji_score['total']}",
+                f"{self.kana_to_romaji_score['total']} "
+                f"({kana_to_romaji_percentage:.2f}%)",
                 "blue",
                 attrs=["bold"],
             )
@@ -245,7 +284,8 @@ class KanaPractice:
             colored(
                 f"Romaji to kana score:"
                 f" {self.romaji_to_kana_score['correct']}/"
-                f"{self.romaji_to_kana_score['total']}",
+                f"{self.romaji_to_kana_score['total']} "
+                f"({romaji_to_kana_percentage:.2f}%)",
                 "blue",
                 attrs=["bold"],
             )
