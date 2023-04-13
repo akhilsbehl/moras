@@ -3,11 +3,11 @@
 import csv
 import datetime
 import os
+import random
 import sys
 from typing import Dict
 from typing import Tuple
 
-import numpy as np
 from termcolor import colored
 
 KANA_TO_ROMAJI: Dict[str, Dict[str, str]] = {
@@ -346,6 +346,7 @@ class KanaPractice:
 
     def ask_for_choice(self) -> None:
         """Ask the user for a choice."""
+        self.kana_type = "?"
         try:
             while self.kana_type not in self.choices:
                 user_input = input(
@@ -380,7 +381,7 @@ class KanaPractice:
 
     def get_random_kana(self) -> Tuple[str, str]:
         """Get a randomized kana."""
-        kana = np.random.choice(self.kanas, p=self.sampling_rates)
+        kana = random.choices(self.kanas, weights=self.sampling_rates, k=1)[0]
         romaji = KANA_TO_ROMAJI[self.kana_type][kana]
         return kana, romaji
 
