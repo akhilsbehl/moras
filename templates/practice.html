@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ ktype }} Practice</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ ktype }} Practice</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <style>
         body {
             background-color: #AA00FF;
             display: flex;
@@ -57,6 +57,16 @@
             color: #660099;
             margin-bottom: 20px;
         }
+        .user-input {
+            display: block;
+            width: 50%;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #660099;
+            border-radius: 5px;
+        }
 
         /* Responsive Styles */
         @media screen and (max-width: 767px) {
@@ -79,41 +89,38 @@
                 margin-bottom: 10px;
             }
         }
-    </style>
-</head>
-<body onload="document.getElementById('user_input').focus();">
-    <div class="container">
-        <h1>{{ ktype }} Practice</h1>
-        <h2>頑張ってね!</h2>
-        <div class="kana-display">
-            {{ kana }}
+        </style>
+    </head>
+    <body onload="document.getElementById('user_input').focus();">
+        <div class="container">
+            <h1>{{ ktype }} Practice</h1>
+            <h2>頑張ってね!</h2>
+            <div class="kana-display">
+                {{ kana }}
+            </div>
+            <form action="{{ url_for('check_answer') }}" method="POST" onsubmit="return checkAnswer();">
+                <input type="hidden" name="ktype" value="{{ ktype }}">
+                <input type="hidden" name="current_kana" value="{{ kana }}">
+                <input type="text" name="user_input" id="user_input" class="user-input" required>
+            </form>
+            <div class="score">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                    {% else %}
+                        0% (0/0)
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <a href="{{ url_for('finish_session', ktype=ktype) }}" class="button">十分です</a>
         </div>
-        <form action="{{ url_for('check_answer') }}" method="POST" onsubmit="return checkAnswer();">
-            <input type="hidden" name="ktype" value="{{ ktype }}">
-            <input type="hidden" name="current_kana" value="{{ kana }}">
-            <input type="text" name="user_input" id="user_input" required>
-        </form>
-        <div class="score">
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        {{ message }}
-                    {% endfor %}
-                {% else %}
-                    0% (0/0)
-                {% endif %}
-            {% endwith %}
-    </div>
-    <a href="{{ url_for('finish_session', ktype=ktype) }}" class="button">十分です</a>
-</div>
-
-<script>
-    function checkAnswer() {
-        document.forms[0].submit();
-        return false;
-    }
-</script>
-
-</body>
+        <script>
+        function checkAnswer() {
+            document.forms[0].submit();
+            return false;
+        }
+        </script>
+    </body>
 </html>
-```
