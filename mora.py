@@ -117,7 +117,7 @@ class PracticeAnalytics:
         """Initialize."""
         self.file_name = file_name
         self.analytics = self.load_analytics()
-        self.current_session_data = {"Hiragana": {}, "Katakana": {}}
+        self.current_session_data = {k: {} for k in KANA_TO_ROMAJI.keys()}
 
     def load_analytics(self) -> Dict[str, Dict[str, Dict[str, float]]]:
         """Load the analytics data."""
@@ -141,7 +141,7 @@ class PracticeAnalytics:
                     analytics[kana_type][kana]["Times Correct"] \
                         += int(times_correct)
 
-        for kana_type in analytics:
+        for kana_type in KANA_TO_ROMAJI.keys():
             for kana, data in analytics[kana_type].items():
                 times_seen = data["Times Seen"]
                 times_correct = data["Times Correct"]
@@ -165,10 +165,15 @@ class PracticeAnalytics:
                 ]
             )
 
+            today = datetime.date.today().strftime("%Y-%m-%d")
+            for kana_type in KANA_TO_ROMAJI.keys():
+                for kana in KANA_TO_ROMAJI[kana_type].keys():
+                    writer.writerow([today, kana_type, kana, 0, 0, 0])
+
     def calculate_accuracies(self) -> Dict[str, Dict[str, float]]:
         """Calculate accuracies at Kana level."""
         accuracies = {"Hiragana": {}, "Katakana": {}}
-        for kana_type in self.analytics:
+        for kana_type in KANA_TO_ROMAJI.keys():
             for kana in self.analytics[kana_type]:
                 times_seen = self.analytics[kana_type][kana]["Times Seen"]
                 times_correct = self \
@@ -180,18 +185,57 @@ class PracticeAnalytics:
     def calculate_sampling_rates(
         self, accuracies: Dict[str, Dict[str, float]]
     ) -> Dict[str, Dict[str, float]]:
-        """Calculate sampling rates inversely proportional to accuracies."""
+        """Calculate sampling rates based on seen frequency and accuracy."""
         sampling_rates = {"Hiragana": {}, "Katakana": {}}
-        for kana_type in accuracies:
-            reciprocal_accuracies = {
-                kana: max(20, 1 / accuracy)
+
+        for kana_type in KANA_TO_ROMAJI.keys():
+            kana_data = [
+                {
+                    "kana": kana,
+                    "times_seen": self
+                    .analytics[kana_type][kana]["Times Seen"],
+                    "accuracy": accuracy,
+                }
                 for kana, accuracy in accuracies[kana_type].items()
-            }
-            total_reciprocal_accuracy = sum(reciprocal_accuracies.values())
+            ]
+
+            min_seen = min(data["times_seen"] for data in kana_data)
+            max_seen = max(data["times_seen"] for data in kana_data)
+            min_accuracy = min(data["accuracy"] for data in kana_data)
+            max_accuracy = max(data["accuracy"] for data in kana_data)
+
+            if max_seen == min_seen:
+                seen_range = 1
+            else:
+                seen_range = max_seen - min_seen
+
+            if max_accuracy == min_accuracy:
+                accuracy_range = 1
+            else:
+                accuracy_range = max_accuracy - min_accuracy
+
+            adjusted_rates = {}
+            for data in kana_data:
+                seen_relative = (data["times_seen"] - min_seen) / seen_range
+                accuracy_relative = (data["accuracy"] - min_accuracy) \
+                    / accuracy_range
+
+                if seen_relative < 0.5:
+                    rate = 2 ** (1 - seen_relative * 2)
+                else:
+                    if accuracy_relative < 0.5:
+                        rate = 1 + (1 - accuracy_relative * 2)
+                    else:
+                        rate = 1 - (accuracy_relative - 0.5) * 2
+
+                adjusted_rates[data["kana"]] = rate
+
+            total_adjusted_rate = sum(adjusted_rates.values())
             normalized_sampling_rate = {
-                kana: reciprocal_accuracy / total_reciprocal_accuracy
-                for kana, reciprocal_accuracy in reciprocal_accuracies.items()
+                kana: rate / total_adjusted_rate
+                for kana, rate in adjusted_rates.items()
             }
+
             sampling_rates[kana_type] = normalized_sampling_rate
         return sampling_rates
 
@@ -209,60 +253,64 @@ class PracticeAnalytics:
         if correct:
             self.current_session_data[kana_type][kana]["Times Correct"] += 1
 
-    @property
-    def session_score(self) -> Dict[str, int]:
-        """Return the session score."""
+    def calculate_scores(
+            self, from_session: Dict, kana_type: str
+    ) -> Dict[str, int]:
+        """Calculate scores for historical or current session."""
         total, correct = 0, 0
-        for kana_type in self.current_session_data:
-            for kana in self.current_session_data[kana_type]:
-                total += self \
-                    .current_session_data[kana_type][kana]["Times Seen"]
-                correct += self \
-                    .current_session_data[kana_type][kana]["Times Correct"]
+        for kana in from_session[kana_type]:
+            total += from_session[kana_type][kana]["Times Seen"]
+            correct += from_session[kana_type][kana]["Times Correct"]
         return {"total": total, "correct": correct}
 
-    def print_session_scores(self) -> None:
-        """Print the session scores."""
-        session_score = self.session_score
+    def calculate_total_scores(self, kana_type) -> Dict[str, int]:
+        """Print the final scores."""
+        current_scores = self.calculate_scores(
+            self.current_session_data,
+            kana_type
+        )
+
+        past_scores = self.calculate_scores(
+            self.analytics,
+            kana_type
+        )
+
+        session_scores = {
+            k: current_scores[k] + past_scores[k] for k in
+            current_scores.keys()
+        }
+
+        return session_scores
+
+    def print_scores(self, from_session: str, kana_type: str) -> None:
+        """Print the scores for historical or current session."""
+        assert from_session in ("Current", "Past", "Total")
+
+        if from_session == "Current":
+            scores = self.calculate_scores(
+                self.current_session_data,
+                kana_type
+            )
+        elif from_session == "Past":
+            scores = self.calculate_scores(self.analytics, kana_type)
+        else:
+            scores = self.calculate_total_scores(kana_type)
+
         percentage = (
-            session_score["correct"] / session_score["total"] * 100
-            if session_score["total"] != 0
+            scores["correct"] / scores["total"] * 100
+            if scores["total"] != 0
             else 0
         )
+
         print(
-            "Session score:",
+            f"{from_session} score:",
             colored(
-                f"{session_score['correct']}/"
-                f"{session_score['total']} "
+                f"{scores['correct']}/"
+                f"{scores['total']} "
                 f"({percentage:.2f}%)",
                 "blue",
                 attrs=["bold"],
             ),
-        )
-
-    def calculate_final_scores(self) -> float:
-        """Print the final scores."""
-        session_score = self.session_score
-        session_percentage = (
-            session_score["correct"] / session_score["total"] * 100
-            if session_score["total"] != 0
-            else 0
-        )
-        return session_percentage
-
-    def print_final_scores(self) -> None:
-        """Print the final scores."""
-        session_percentage = self.calculate_final_scores()
-        session_score = self.session_score
-
-        print(
-            colored(
-                f"\nFinal score: {session_score['correct']}/"
-                f"{session_score['total']} "
-                f"({session_percentage:.2f}%)",
-                "blue",
-                attrs=["bold"],
-            )
         )
 
     def save_analytics_data(self) -> None:
@@ -294,13 +342,13 @@ class KanaPractice:
     def __init__(self) -> None:
         """Initialize."""
         self.choices = ["Hiragana", "Katakana"]
-        self.selected_choice = None
+        self.kana_type = None
         self.analytics = PracticeAnalytics()
 
     def ask_for_choice(self) -> None:
         """Ask the user for a choice."""
         try:
-            while self.selected_choice not in self.choices:
+            while self.kana_type not in self.choices:
                 user_input = input(
                     "Which one do you want to practice "
                     f"({', '.join(self.choices)})? "
@@ -309,7 +357,7 @@ class KanaPractice:
                     c for c in self.choices if c.lower().startswith(user_input)
                 ]
                 if len(matched_choices) == 1:
-                    self.selected_choice = matched_choices[0]
+                    self.kana_type = matched_choices[0]
                 elif len(matched_choices) > 1:
                     print(
                         "Multiple matches found:",
@@ -320,16 +368,23 @@ class KanaPractice:
         except KeyboardInterrupt:
             print("\nSession aborted.")
             sys.exit()
+        else:
+            self.fix_kana_sampling_rates()
+
+    def fix_kana_sampling_rates(self) -> None:
+        """Fix the sampling rates for the kana."""
+        assert self.kana_type is not None
+        kana_dict = KANA_TO_ROMAJI[self.kana_type]
+        accuracies = self.analytics.calculate_accuracies()
+        rates = self.analytics \
+            .calculate_sampling_rates(accuracies)[self.kana_type]
+        self.kanas = list(rates.keys())
+        self.sampling_rates = list(rates.values())
 
     def get_random_kana(self) -> Tuple[str, str]:
         """Get a randomized kana."""
-        assert self.selected_choice is not None
-        kana_dict = KANA_TO_ROMAJI[self.selected_choice]
-        rates = self.analytics.calculate_sampling_rates(
-            self.analytics.calculate_accuracies()
-        )
-        kana = np.random.choice(list(kana_dict.keys()), p=rates)
-        romaji = kana_dict[kana]
+        kana = np.random.choice(self.kanas, p=self.sampling_rates)
+        romaji = KANA_TO_ROMAJI[self.kana_type][kana]
         return kana, romaji
 
     def start_practice(self) -> None:
@@ -338,7 +393,11 @@ class KanaPractice:
             while True:
                 kana, romaji = self.get_random_kana()
                 self.prompt_kana_to_romaji(kana, romaji)
-                self.analytics.print_session_scores()
+                assert self.kana_type is not None
+                self.analytics.print_scores(
+                    kana_type=self.kana_type,
+                    from_session="Current",
+                )
 
         except KeyboardInterrupt:
             self.finish_practice()
@@ -346,32 +405,42 @@ class KanaPractice:
     def prompt_kana_to_romaji(self, kana: str, romaji: str) -> None:
         """Prompt the user for kana to romaji translation."""
         user_input = input(
-            f"What is the romaji representation of {self.selected_choice} "
+            f"What is the romaji representation of {self.kana_type} "
             + colored(f"{kana}", "yellow", attrs=["bold"])
             + ": "
         )
-        kana_type = self.selected_choice
-        assert kana_type is not None
-        self.analytics \
-            .current_session_data[kana_type][kana]['Times Seen'] \
-            += 1
 
         if user_input.lower() == romaji.lower():
             print(colored("\u2714 Correct!", "green", attrs=["bold"]))
-            self.analytics \
-                .current_session_data[kana_type][kana]['Times Correct'] \
-                += 1
+            correct = True
         else:
             print(
                 colored("\u2716 Incorrect!", "red", attrs=["bold"]),
                 "The correct answer is ",
                 colored(f"{romaji}", "red", attrs=["bold"]) + ".",
             )
-        self.analytics.session_score["total"] += 1
+            correct = False
+
+        assert self.kana_type is not None
+        self.analytics.update_analytics_data(self.kana_type, kana, correct)
 
     def finish_practice(self) -> None:
         """Finish the session."""
-        self.analytics.print_final_scores()
+        assert self.kana_type is not None
+
+        print("\nFinished practice.")
+        self.analytics.print_scores(
+            kana_type=self.kana_type,
+            from_session="Past",
+        )
+        self.analytics.print_scores(
+            kana_type=self.kana_type,
+            from_session="Current",
+        )
+        self.analytics.print_scores(
+            kana_type=self.kana_type,
+            from_session="Total",
+        )
         self.analytics.save_analytics_data()
 
 
