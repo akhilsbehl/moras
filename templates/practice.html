@@ -57,6 +57,28 @@
             color: #660099;
             margin-bottom: 20px;
         }
+
+        /* Responsive Styles */
+        @media screen and (max-width: 767px) {
+            .container {
+                width: 90%;
+            }
+            .kana-display {
+                font-size: 96px;
+                padding: 20px;
+                margin: 20px;
+            }
+            .button {
+                font-size: 24px;
+                padding: 8px 16px;
+            }
+            .score {
+                font-size: 18px;
+            }
+            h1, h2, form {
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body onload="document.getElementById('user_input').focus();">
@@ -81,15 +103,17 @@
                     0% (0/0)
                 {% endif %}
             {% endwith %}
-        </div>
-        <a href="{{ url_for('finish_session', ktype=ktype) }}" class="button">十分です</a>
     </div>
+    <a href="{{ url_for('finish_session', ktype=ktype) }}" class="button">十分です</a>
+</div>
 
-    <script>
-        function checkAnswer() {
-            document.forms[0].submit();
-            return false;
-        }
-    </script>
+<script>
+    function checkAnswer() {
+        document.forms[0].submit();
+        return false;
+    }
+</script>
+
 </body>
 </html>
+```
