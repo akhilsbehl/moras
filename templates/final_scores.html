@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Scores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-color: #AA00FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            border: 12px solid #660099;
+            padding: 24px;
+            background-color: white;
+            border-radius: 10px;
+            width: 80%;
+        }
+        .button {
+            background-color: #660099;
+            color: #FFFFFF;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #FFFFFF;
+            color: #660099;
+            border: 2px solid #660099;
+        }
+        h1, h2, th, td {
+            color: #660099;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #660099;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ ktype }} Practice</h1>
+        <h2>Final Scores</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Session</th>
+                    <th>Kana Seen</th>
+                    <th>Kana Answered Correctly</th>
+                    <th>Accuracy(%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session, score in final_scores.items() %}
+                <tr>
+                    <td>{{ session }}</td>
+                    <td>{{ score.kana_seen }}</td>
+                    <td>{{ score.kana_answered_correctly }}</td>
+                    <td>{{ score.accuracy }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('index') }}" class="button">Start over</a>
+        <a href="{{ url_for('download_practice_data') }}" class="button" download>Download practice data</a>
+    </div>
+</body>
+</html>

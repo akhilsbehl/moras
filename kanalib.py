@@ -109,16 +109,7 @@ KANA_TO_ROMAJI: Dict[str, Dict[str, str]] = {
 }
 
 CHOICES = list(KANA_TO_ROMAJI.keys())
-
-DATA_STORE_COL_NAMES = [
-    "Date",
-    "Kana Type",
-    "Kana",
-    "Times Seen",
-    "Times Correct",
-    "Accuracy",
-]
-
+TEMPLATE_DATA_STORE = "analytics-template.csv"
 
 KTYPE_DICT_TEMPLATE = {k: {} for k in KANA_TO_ROMAJI.keys()}
 
@@ -134,23 +125,31 @@ class Analytics(object):
 
     def load_past_data(self) -> Dict[str, Dict[str, Dict[str, float]]]:
         """Load the analytics data."""
+        past_data = copy.deepcopy(KTYPE_DICT_TEMPLATE)
+
         if not os.path.exists(self.file_name):
             self.create_data_store()
 
-        past_data = copy.deepcopy(KTYPE_DICT_TEMPLATE)
+        with open(TEMPLATE_DATA_STORE, "r") as temp:
+            reader = csv.reader(temp)
+            next(reader)
+            rows = [r for r in reader]
+
         with open(self.file_name, "r") as file:
             reader = csv.reader(file)
-            next(reader)  # Skip header
-            for row in reader:
-                _, ktype, kana, seen, correct, _ = row
-                if kana not in past_data[ktype]:
-                    past_data[ktype][kana] = {
-                        "seen": int(seen),
-                        "correct": int(correct),
-                    }
-                else:
-                    past_data[ktype][kana]["seen"] += int(seen)
-                    past_data[ktype][kana]["correct"] += int(correct)
+            next(reader)
+            rows += [r for r in reader]
+
+        for row in rows:
+            _, ktype, kana, seen, correct, _ = row
+            if kana not in past_data[ktype]:
+                past_data[ktype][kana] = {
+                    "seen": int(seen),
+                    "correct": int(correct),
+                }
+            else:
+                past_data[ktype][kana]["seen"] += int(seen)
+                past_data[ktype][kana]["correct"] += int(correct)
 
         for ktype in KTYPE_DICT_TEMPLATE.keys():
             for kana, data in past_data[ktype].items():
@@ -163,13 +162,11 @@ class Analytics(object):
 
     def create_data_store(self) -> None:
         """Create a new file for analytics the first time."""
-        with open(self.file_name, "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(DATA_STORE_COL_NAMES)
-            today = datetime.date.today().strftime("%Y-%m-%d")
-            for ktype in KTYPE_DICT_TEMPLATE.keys():
-                for kana in KANA_TO_ROMAJI[ktype].keys():
-                    writer.writerow([today, ktype, kana, 0, 0, 0])
+        with open(TEMPLATE_DATA_STORE, "r", newline="") as temp:
+            colnames = temp.readline().strip().split(",")
+            with open(self.file_name, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(colnames)
 
     def calculate_accuracies(self) -> Dict[str, Dict[str, float]]:
         """Calculate accuracies at Kana level."""
@@ -365,13 +362,16 @@ def validate_input_against_answer(input_: str, answer: str) -> bool:
     return correct
 
 
-def get_final_scores(ktype) -> dict[str, Tuple]:
+def get_final_scores(ktype) -> Dict[str, Dict]:
     """Prepare all the scores for the final analysis."""
-    scores, sessions = {}, (
-        "Past",
-        "This",
-        "Total",
-    )
+    sessions = ("Past", "This", "Total")
+    results = {}
     for session in sessions:
-        scores[session] = ANALYTICS.get_score(session, ktype)
-    return scores
+        _ = ANALYTICS.get_score(session, ktype)
+        results[session] = {
+            "session": session,
+            "kana_seen": _[0],
+            "kana_answered_correctly": _[1],
+            "accuracy": f"{_[2]:.1f}",
+        }
+    return results
