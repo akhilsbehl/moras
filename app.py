@@ -64,6 +64,11 @@ def download_practice_data():
         return redirect(url_for("index", _external=True, _scheme="https"))
 
 
+@app.route("/review")
+def review():
+    return render_template("review.html")
+
+
 @app.route("/visualize_analytics")
 def visualize_analytics():
     return render_template("visualize.html")

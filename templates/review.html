@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Kana Dojo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
+    <header>
+        <a href="/" class="button">Start over</a>
+    </header>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to Kana Dojo</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <style>
         body {
             background-color: #AA00FF;
             display: flex;
@@ -38,6 +41,11 @@
             color: #660099;
             border: 2px solid #660099;
         }
+        .image-wrapper {
+            border: 2px solid #000;
+            padding: 10px;
+            border-radius: 10px;
+        }
         h1, h2, th, td {
             color: #660099;
             font-weight: bold;
@@ -52,15 +60,18 @@
             text-align: left;
             border-bottom: 1px solid #660099;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-    <h1>Welcome to Kana Dojo!</h1>
-    <h2>How would you like to practice today?</h2>
-        <a href="{{ url_for('practice', ktype='Hiragana') }}" class="button">Test ひらがな</a>
-        <a href="{{ url_for('practice', ktype='Katakana') }}" class="button">Test カタカナ</a>
-        <a href="{{ url_for('review') }}" class="button">Review ごじゅうおんず</a>
-    </div>
-</body>
+        img {
+            max-width: 90%;
+            height: 90%;
+            border-radius: 5px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="image-wrapper">
+                <img src="static/kana.png" alt="A sample image">
+            </div>
+        </div>
+    </body>
 </html>

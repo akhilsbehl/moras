@@ -58,9 +58,9 @@
             margin-bottom: 20px;
         }
         .user-input {
-            display: block;
+            text-align: center;
             width: 50%;
-            max-width: 300px;
+            max-width: 250;
             margin: 0 auto;
             padding: 10px;
             font-size: 16px;
@@ -85,6 +85,11 @@
             .score {
                 font-size: 18px;
             }
+            .user-input {
+                text-align: center;
+                width: 20%;
+                max-width: 150px;
+            }
             h1, h2, form {
                 margin-bottom: 10px;
             }
@@ -93,8 +98,8 @@
     </head>
     <body onload="document.getElementById('user_input').focus();">
         <div class="container">
-            <h1>{{ ktype }} Practice</h1>
-            <h2>頑張ってね!</h2>
+            <h2>{{ ktype }} Practice</h1>
+            <h1>頑張ってね!</h2>
             <div class="kana-display">
                 {{ kana }}
             </div>
