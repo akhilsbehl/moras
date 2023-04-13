@@ -342,7 +342,6 @@ class KanaPractice:
     def __init__(self) -> None:
         """Initialize."""
         self.choices = ["Hiragana", "Katakana"]
-        self.kana_type = None
         self.analytics = PracticeAnalytics()
 
     def ask_for_choice(self) -> None:
@@ -373,8 +372,6 @@ class KanaPractice:
 
     def fix_kana_sampling_rates(self) -> None:
         """Fix the sampling rates for the kana."""
-        assert self.kana_type is not None
-        kana_dict = KANA_TO_ROMAJI[self.kana_type]
         accuracies = self.analytics.calculate_accuracies()
         rates = self.analytics \
             .calculate_sampling_rates(accuracies)[self.kana_type]
@@ -393,7 +390,6 @@ class KanaPractice:
             while True:
                 kana, romaji = self.get_random_kana()
                 self.prompt_kana_to_romaji(kana, romaji)
-                assert self.kana_type is not None
                 self.analytics.print_scores(
                     kana_type=self.kana_type,
                     from_session="Current",
@@ -421,13 +417,10 @@ class KanaPractice:
             )
             correct = False
 
-        assert self.kana_type is not None
         self.analytics.update_analytics_data(self.kana_type, kana, correct)
 
     def finish_practice(self) -> None:
         """Finish the session."""
-        assert self.kana_type is not None
-
         print("\nFinished practice.")
         self.analytics.print_scores(
             kana_type=self.kana_type,
@@ -444,7 +437,12 @@ class KanaPractice:
         self.analytics.save_analytics_data()
 
 
+def practice():
+    """Start a practice session."""
+    session = KanaPractice()
+    session.ask_for_choice()
+    session.start_practice()
+
+
 if __name__ == "__main__":
-    practice = KanaPractice()
-    practice.ask_for_choice()
-    practice.start_practice()
+    practice()
