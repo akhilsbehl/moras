@@ -1,91 +1,69 @@
-// Define the SVG dimensions and margin
-var margin = { top: 20, right: 20, bottom: 30, left: 40 },
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+function createChart(data, kanaType) {
+  const processedData = data.filter(row => row['Kana Type'] === kanaType)
+    .sort((a, b) => a.Accuracy - b.Accuracy);
 
-// Define the x and y scales and axes
-var x0 = d3.scaleBand().rangeRound([0, width]).paddingInner(0.1);
-var x1 = d3.scaleBand().padding(0.05);
-var y = d3.scaleLinear().rangeRound([height, 0]);
-var xAxis = d3.axisBottom(x0);
-var yAxis = d3.axisLeft(y).ticks(10, "%");
+  const labels = processedData.map(row => row.Kana);
+  const accuracyData = processedData.map(row => row.Accuracy);
+  const timesSeenData = processedData.map(row => row['Times Seen']);
+  const timesCorrectData = processedData.map(row => row['Times Correct']);
 
-// Define the color scale
-var color = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+  const ctx = document.getElementById('myChart').getContext('2d');
+  
+  // Destroy the previous chart if it exists
+  if (window.myChart && window.myChart.destroy) {
+    window.myChart.destroy();
+  }
 
-// Create the SVG element and add the axis groups
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  window.myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Accuracy',
+        data: accuracyData,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const dataIndex = context.dataIndex;
+              const timesSeen = timesSeenData[dataIndex];
+              const timesCorrect = timesCorrectData[dataIndex];
+              return `Accuracy: ${context.parsed.x.toFixed(2)} | Times Seen: ${timesSeen} | Times Correct: ${timesCorrect}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          max: 1
+        }
+      }
+    }
+  });
+}
 
-// Load the data from the CSV file on the server-side
-d3.csv("/static/analytics.csv", function(error, data) {
-    if (error) console.log(error);
-
-    // Nest the data by Kana Type and Kana
-    var nestedData = d3.nest()
-        .key(function(d) { return d["Kana Type"]; })
-        .key(function(d) { return d["Kana"]; })
-        .rollup(function(d) { return d3.mean(d, function(d) { return d["Accuracy"]; }); })
-        .entries(data);
-
-    // Update the domains of the x and y scales
-    x0.domain(nestedData.map(function(d) { return d.key; }));
-    x1.domain(nestedData[0].values.map(function(d) { return d.key; })).rangeRound([0, x0.bandwidth()]);
-    y.domain([0, d3.max(nestedData, function(d) { return d3.max(d.values, function(d) { return d.value; }); })]);
-
-    // Add the x and y axes
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-        .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Accuracy");
-
-    // Add the bars to the chart
-    var kanaType = svg.selectAll(".kanaType")
-        .data(nestedData)
-        .enter().append("g")
-        .attr("class", "kanaType")
-        .attr("transform", function(d) { return "translate(" + x0(d.key) + ",0)"; });
-
-    kanaType.selectAll("rect")
-        .data(function(d) { return d.values; })
-        .enter().append("rect")
-        .attr("x", function(d) { return x1(d.key); })
-        .attr("y", function(d) { return y(d.value); })
-        .attr("width", x1.bandwidth())
-        .attr("height", function(d) { return height - y(d.value); })
-        .attr("fill", function(d) { return color(d.key); });
-
-    // Add the legend to the chart
-    var legend = svg.selectAll(".legend")
-        .data(nestedData[0].values.map(function(d) { return d.key; }))
-        .enter().append("g")
-        .attr("class", "legend")
-        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-    legend.append("rect")
-        .attr("x", width - 18)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", color);
-
-    legend.append("text")
-        .attr("x", width - 24)
-        .attr("y", 9)
-        .attr("dy", ".35em")
-        .style("text-anchor", "end")
-        .text(function(d) { return d; });
+// Read the CSV file and process the data
+Papa.parse('/static/analytics.csv', {
+    header: true,
+    download: true,
+    complete: (results) => {
+        const kanaTypes = Array.from(new Set(results.data.map(row => row['Kana Type'])));
+        createChart(results.data, kanaTypes[0]);
+        // Add toggle logic for Kana Types
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 't') {
+                const currentKanaType = kanaTypes.shift();
+                kanaTypes.push(currentKanaType);
+                createChart(results.data, kanaTypes[0]);
+            }
+        });
+    }
 });
