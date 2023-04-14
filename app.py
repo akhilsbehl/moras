@@ -6,6 +6,7 @@ from flask import request
 from flask import send_from_directory
 from flask import url_for
 
+from kanalib import AnalyticsUtils
 from kanalib import ANALYTICS
 from kanalib import CHOICES
 from kanalib import get_final_scores
@@ -46,7 +47,10 @@ def check_answer():
 @app.route("/finish_session/<ktype>")
 def finish_session(ktype):
     final_scores = get_final_scores(ktype)
+    global ANALYTICS
     ANALYTICS.save_analytics_data()
+    # Actually reset
+    ANALYTICS = AnalyticsUtils()
     return render_template(
         "final_scores.html",
         ktype=ktype,

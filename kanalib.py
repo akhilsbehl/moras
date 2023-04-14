@@ -114,7 +114,7 @@ TEMPLATE_DATA_STORE = "analytics-template.csv"
 KTYPE_DICT_TEMPLATE = {k: {} for k in KANA_TO_ROMAJI.keys()}
 
 
-class Analytics(object):
+class AnalyticsUtils(object):
     """Analytics for the practice sessions."""
 
     def __init__(self, file_name: str = "analytics.csv"):
@@ -331,7 +331,7 @@ class Analytics(object):
         return None
 
 
-ANALYTICS = Analytics()
+ANALYTICS = AnalyticsUtils()
 SAMPLING_RATES = {
     k: (list(v.keys()), list(v.values()))
     for k, v in ANALYTICS.calculate_sampling_rates().items()
