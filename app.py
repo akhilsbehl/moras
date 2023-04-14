@@ -62,7 +62,7 @@ def finish_session(ktype):
 def download_practice_data():
     try:
         return send_from_directory(
-            directory=".", path="analytics.csv", as_attachment=True
+            directory=".", path="static/analytics.csv", as_attachment=True
         )
     except FileNotFoundError:
         return redirect(url_for("index", _external=True, _scheme="https"))

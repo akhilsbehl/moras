@@ -117,7 +117,7 @@ KTYPE_DICT_TEMPLATE = {k: {} for k in KANA_TO_ROMAJI.keys()}
 class AnalyticsUtils(object):
     """Analytics for the practice sessions."""
 
-    def __init__(self, file_name: str = "analytics.csv"):
+    def __init__(self, file_name: str = "static/analytics.csv"):
         """Initialize."""
         self.file_name = file_name
         self.past_data = self.load_past_data()
