@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-    <header>
-        <a href="/" class="button">Start over</a>
-    </header>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Kana Dojo</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Kana Dojo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
         body {
             background-color: #AA00FF;
             display: flex;
@@ -45,6 +42,7 @@
             border: 2px solid #000;
             padding: 10px;
             border-radius: 10px;
+            margin-bottom: 20px;
         }
         h1, h2, th, td {
             color: #660099;
@@ -62,16 +60,26 @@
         }
         img {
             max-width: 90%;
-            height: 90%;
+            height: auto;
             border-radius: 5px;
         }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="image-wrapper">
-                <img src="static/kana.png" alt="A sample image">
-            </div>
+        @media screen and (max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+            .button {
+                font-size: 24px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image-wrapper">
+            <img src="static/kana.png" alt="A sample image">
         </div>
-    </body>
+        <a href="/" class="button">Start over</a>
+    </div>
+</body>
 </html>
