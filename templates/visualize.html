@@ -9,20 +9,20 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
         <style>
         body {
-            background-color: #ECC6AA;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            background-color: #EEC6AA;
             margin: 0;
+            padding: 2rem;
+            font-family: Arial, sans-serif;
         }
         .container {
             text-align: center;
             border: 12px solid #133955;
-            padding: 24px;
+            padding: 2rem;
             background-color: white;
             border-radius: 10px;
             width: 80%;
+            box-sizing: border-box;
+            margin: 1rem auto;
         }
         .button {
             background-color: #133955;
@@ -57,23 +57,10 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #133955;
-        }
-        img {
-            max-width: 90%;
-            height: auto;
-            border-radius: 5px;
-        }
         @media screen and (max-width: 768px) {
             .container {
                 width: 95%;
+                padding: 1rem;
             }
             .button {
                 font-size: 24px;
