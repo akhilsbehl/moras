@@ -55,7 +55,10 @@ if __name__ == "__main__":
     ktype = ask_for_choice(CHOICES)
     try:
         while True:
-            kana, answer = get_random_kana_romaji_pair(ktype)
+            kana, answer = get_random_kana_romaji_pair(
+                ktype,
+                ANALYTICS.sampling_rates
+            )
             uinput = get_uinput_romaji_of_kana(ktype, kana)
             correct = validate_input_against_answer(uinput, answer)
             ANALYTICS.update_analytics_data(ktype, kana, correct)

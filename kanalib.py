@@ -120,6 +120,10 @@ class AnalyticsUtils(object):
     def __init__(self, file_name: str = "static/analytics.csv"):
         """Initialize."""
         self.file_name = file_name
+        self.reset()
+
+    def reset(self):
+        """Reset to a clean slate."""
         self.past_data = self.load_past_data()
         self.this_session_data = copy.deepcopy(KTYPE_DICT_TEMPLATE)
 
@@ -330,17 +334,23 @@ class AnalyticsUtils(object):
                     writer.writerow(row)
         return None
 
+    @property
+    def sampling_rates(self):
+        return {
+            k: (list(v.keys()), list(v.values()))
+            for k, v in self.calculate_sampling_rates().items()
+        }
+
 
 ANALYTICS = AnalyticsUtils()
-SAMPLING_RATES = {
-    k: (list(v.keys()), list(v.values()))
-    for k, v in ANALYTICS.calculate_sampling_rates().items()
-}
 
 
-def get_random_kana_romaji_pair(ktype: str) -> Tuple[str, str]:
+def get_random_kana_romaji_pair(
+    ktype: str,
+    sampling_rates: Dict,
+) -> Tuple[str, str]:
     """Get a randomized kana."""
-    kanas, rates = SAMPLING_RATES[ktype]
+    kanas, rates = sampling_rates[ktype]
     kana = random.choices(kanas, weights=rates, k=1)[0]
     romaji = KANA_TO_ROMAJI[ktype][kana]
     return kana, romaji

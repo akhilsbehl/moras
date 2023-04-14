@@ -27,7 +27,8 @@ def index():
 @app.route("/practice/<ktype>")
 def practice(ktype):
     global PAIR
-    PAIR["kana"], PAIR["answer"] = get_random_kana_romaji_pair(ktype)
+    PAIR["kana"], PAIR["answer"] = get_random_kana_romaji_pair(
+        ktype, ANALYTICS.sampling_rates)
     return render_template("practice.html", ktype=ktype, kana=PAIR["kana"])
 
 
@@ -39,7 +40,6 @@ def check_answer():
     correct = validate_input_against_answer(user_input, answer)
     ANALYTICS.update_analytics_data(ktype, kana, correct)
     score = ANALYTICS.get_score("This", ktype)
-    print(score)
     flash(f"Score: {score[2]:.1f}% ({score[1]}/{score[0]})")
     return redirect(url_for("practice", ktype=ktype))
 
@@ -47,10 +47,8 @@ def check_answer():
 @app.route("/finish_session/<ktype>")
 def finish_session(ktype):
     final_scores = get_final_scores(ktype)
-    global ANALYTICS
     ANALYTICS.save_analytics_data()
-    # Actually reset
-    ANALYTICS = AnalyticsUtils()
+    ANALYTICS.reset()
     return render_template(
         "final_scores.html",
         ktype=ktype,
